@@ -1,69 +1,142 @@
 // Ultralytics 🚀 AGPL-3.0 License - https://ultralytics.com/license
 
-//  This file is part of the Ultralytics YOLO app, enabling YOLO11 model previews on iOS devices.
-//  Licensed under AGPL-3.0. For commercial use, refer to Ultralytics licensing: https://ultralytics.com/license
-//  Access the source code: https://github.com/ultralytics/yolo-ios-app
+//  ========================================
+//  📱 AppDelegate.swift - 应用程序入口文件
+//  ========================================
 //
-//  The AppDelegate initializes app settings, manages system-level configurations, and facilitates
-//  the integration of additional services such as Firebase analytics.
-//  This file includes the app's delegate class, responsible for handling the app's lifecycle events,
-//  configuring global settings (such as disabling the idle timer and enabling battery monitoring),
-//  and storing app version and device UUID in UserDefaults for easy access throughout the app.
-//  An extension to CALayer is also provided to enable easy screenshot functionality for any layer
-//  within the app, utilizing the device's screen scale for high-resolution captures.
+//  这是 iOS 应用的【程序入口】，是应用启动时第一个被调用的文件
+//  
+//  🔑 关键概念：
+//  - AppDelegate 是应用程序的"代理"，负责处理应用的生命周期事件
+//  - @UIApplicationMain 标记表示这是应用程序的入口点
+//  - 当用户点击 App 图标时，系统会创建 AppDelegate 实例并调用其方法
+//
+//  📚 学习要点：
+//  1. iOS 应用启动流程：系统 → AppDelegate → 窗口 → 视图控制器
+//  2. UserDefaults：用于存储简单的键值对数据（类似于浏览器的 localStorage）
+//  3. UIDevice：获取设备信息的系统类
+//
 
 import UIKit
 
-/// The main application delegate, handling global app behavior and configuration.
+/// 主应用程序代理类，处理全局应用行为和配置
+/// 
+/// 📌 继承关系：
+/// - UIResponder: 响应和处理事件的基类
+/// - UIApplicationDelegate: 定义应用生命周期方法的协议
+///
+/// 📌 @UIApplicationMain 说明：
+/// - 这个注解告诉编译器：这是应用的入口类
+/// - 等同于在 main.swift 中调用 UIApplicationMain() 函数
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
+  
+  /// 应用的主窗口
+  /// 📌 window 是应用界面的根容器，所有 UI 元素都显示在这个窗口内
   var window: UIWindow?
 
-  /// Called when the app finishes launching, used here to set global app settings.
+  /// 🚀 【最重要的方法】应用启动完成时调用
+  ///
+  /// 这个方法在应用完成启动后被系统自动调用，是进行初始化配置的最佳位置
+  /// 
+  /// - Parameters:
+  ///   - application: 当前应用实例
+  ///   - launchOptions: 启动选项字典，包含应用是如何启动的信息（如通过推送通知等）
+  /// - Returns: 返回 true 表示应用成功启动
   func application(
     _ application: UIApplication,
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
-    // Disable screen dimming and auto-lock to keep the app active during long operations.
+    
+    // ============================================
+    // 1️⃣ 禁用屏幕自动锁定
+    // ============================================
+    // 📌 作用：防止屏幕在使用过程中变暗或自动锁定
+    // 📌 场景：YOLO 实时检测需要持续显示相机画面，不希望屏幕自动关闭
     UIApplication.shared.isIdleTimerDisabled = true
 
-    // Enable battery monitoring to allow the app to adapt its behavior based on battery level.
+    // ============================================
+    // 2️⃣ 启用电池监控
+    // ============================================
+    // 📌 作用：允许应用获取电池电量和充电状态
+    // 📌 场景：可以根据电池电量调整应用行为（如低电量时降低推理频率）
     UIDevice.current.isBatteryMonitoringEnabled = true
 
-    // Store the app version and build version in UserDefaults for easy access elsewhere in the app.
+    // ============================================
+    // 3️⃣ 存储应用版本信息到 UserDefaults
+    // ============================================
+    // 📌 Bundle.main.infoDictionary: 包含 Info.plist 中的所有配置信息
+    // 📌 CFBundleShortVersionString: 版本号（如 "1.0.0"）
+    // 📌 CFBundleVersion: 构建号（如 "100"）
     if let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
       let buildVersion = Bundle.main.infoDictionary?["CFBundleVersion"] as? String
     {
+      // 将版本信息存储为 "1.0.0 (100)" 格式
       UserDefaults.standard.set("\(appVersion) (\(buildVersion))", forKey: "app_version")
     }
 
-    // Store the device's UUID in UserDefaults for identification purposes.
+    // ============================================
+    // 4️⃣ 存储设备 UUID 到 UserDefaults
+    // ============================================
+    // 📌 UUID: 设备的唯一标识符，用于识别不同设备
+    // 📌 注意：这个 UUID 在应用重新安装后会改变
     if let uuid = UIDevice.current.identifierForVendor?.uuidString {
       UserDefaults.standard.set(uuid, forKey: "uuid")
     }
 
-    // Ensure UserDefaults changes are immediately saved.
+    // ============================================
+    // 5️⃣ 强制同步 UserDefaults
+    // ============================================
+    // 📌 作用：确保上面设置的值立即写入磁盘
+    // 📌 通常 UserDefaults 会自动同步，但在启动时显式调用更安全
     UserDefaults.standard.synchronize()
 
+    // 返回 true 表示应用启动成功
     return true
   }
 }
 
-/// Extension to CALayer to add functionality for generating screenshots of any layer.
+// ============================================
+// 📸 CALayer 扩展 - 截图功能
+// ============================================
+/// 为 CALayer 添加截图能力的扩展
+/// 
+/// 📌 扩展（Extension）说明：
+/// - Swift 的扩展可以为已有的类、结构体添加新功能
+/// - 这里为 CALayer（图层类）添加了截图属性
 extension CALayer {
+  
+  /// 计算属性：获取当前图层的截图
+  /// 
+  /// 📌 使用场景：用户点击分享按钮时，截取当前检测结果画面
+  /// 
+  /// 📌 实现原理：
+  /// 1. 创建一个图形上下文（画布）
+  /// 2. 将图层内容渲染到画布上
+  /// 3. 从画布中提取图片
   var screenShot: UIImage? {
-    // Begin a new image context, using the device's screen scale to ensure high-resolution output.
+    // 开始一个新的图像上下文
+    // 📌 参数说明：
+    // - frame.size: 图片尺寸，与图层大小相同
+    // - false: 是否不透明（false 表示支持透明度）
+    // - UIScreen.main.scale: 屏幕缩放因子（确保 Retina 屏幕的清晰度）
     UIGraphicsBeginImageContextWithOptions(frame.size, false, UIScreen.main.scale)
+    
+    // defer 关键字：确保无论函数如何退出，都会执行清理操作
+    // 📌 这里确保图形上下文被正确关闭，避免内存泄漏
     defer {
       UIGraphicsEndImageContext()
-    }  // Ensure the image context is cleaned up correctly.
-
+    }
+    
+    // 获取当前图形上下文并渲染图层
     if let context = UIGraphicsGetCurrentContext() {
-      // Render the layer into the current context.
+      // 将图层内容绘制到当前上下文
       render(in: context)
-      // Attempt to generate an image from the current context.
+      // 从上下文中提取图片并返回
       return UIGraphicsGetImageFromCurrentImageContext()
     }
-    return nil  // Return nil if the operation fails.
+    
+    // 如果操作失败，返回 nil
+    return nil
   }
 }
