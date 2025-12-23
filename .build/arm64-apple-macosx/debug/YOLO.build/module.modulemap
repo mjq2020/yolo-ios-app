@@ -1,4 +1,0 @@
-module YOLO {
-    header "/Users/jackmu/ioscode/yolo-ios-app/.build/arm64-apple-macosx/debug/YOLO.build/YOLO-Swift.h"
-    requires objc
-}

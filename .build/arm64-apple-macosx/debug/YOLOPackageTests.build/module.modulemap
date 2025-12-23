@@ -1,4 +1,0 @@
-module YOLOPackageTests {
-    header "/Users/jackmu/ioscode/yolo-ios-app/.build/arm64-apple-macosx/debug/YOLOPackageTests.build/YOLOPackageTests-Swift.h"
-    requires objc
-}
